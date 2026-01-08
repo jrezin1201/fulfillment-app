@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 // GET /api/components/[id] - Get single component
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { id } = await context.params;
+    const { id } = params;
     const component = await prisma.component.findUnique({
       where: { id },
       include: {
@@ -39,10 +40,11 @@ export async function GET(
 // PUT /api/components/[id] - Update component
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { id } = await context.params;
+    const { id } = params;
     const body = await request.json();
 
     const component = await prisma.component.update({
@@ -76,10 +78,11 @@ export async function PUT(
 // DELETE /api/components/[id] - Delete component
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { id } = await context.params;
+    const { id } = params;
     await prisma.component.delete({
       where: { id },
     });

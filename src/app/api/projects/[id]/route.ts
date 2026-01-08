@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 // GET /api/projects/[id] - Get single project
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { id } = await context.params;
+    const { id } = params;
     const project = await prisma.project.findUnique({
       where: { id: id },
       include: {
@@ -47,12 +48,13 @@ export async function GET(
 // PUT /api/projects/[id] - Update project
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const body = await request.json();
 
-    const { id } = await context.params;
+    const { id } = params;
     const project = await prisma.project.update({
       where: { id: id },
       data: {
@@ -80,10 +82,11 @@ export async function PUT(
 // DELETE /api/projects/[id] - Delete project
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const { id } = await context.params;
+    const { id } = params;
     await prisma.project.delete({
       where: { id },
     });
