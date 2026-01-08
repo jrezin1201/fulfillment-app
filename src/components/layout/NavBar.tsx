@@ -12,6 +12,7 @@ export function NavBar() {
     { href: "/projects", label: "Projects" },
     { href: "/kits", label: "Kits" },
     { href: "/components-library", label: "Components" },
+    { href: "/instructions", label: "Instructions" },
   ];
 
   return (

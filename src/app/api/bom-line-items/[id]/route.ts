@@ -4,13 +4,14 @@ import { prisma } from "@/lib/prisma";
 // PUT /api/bom-line-items/[id] - Update BOM line item
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const bomLineItem = await prisma.bomLineItem.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         unitsPerKit: body.unitsPerKit ? parseFloat(body.unitsPerKit) : undefined,
         bufferPercent: body.bufferPercent ? parseFloat(body.bufferPercent) : undefined,
@@ -41,11 +42,12 @@ export async function PUT(
 // DELETE /api/bom-line-items/[id] - Remove component from kit BOM
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.bomLineItem.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

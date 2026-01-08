@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/components - List all components
+/**
+ * GET /api/components
+ * List all components
+ */
 export async function GET() {
   try {
     const components = await prisma.component.findMany({
       orderBy: { name: "asc" },
     });
+
     return NextResponse.json(components);
   } catch (error) {
     console.error("Error fetching components:", error);
@@ -17,28 +21,29 @@ export async function GET() {
   }
 }
 
-// POST /api/components - Create new component
+/**
+ * POST /api/components
+ * Create a new component
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     const component = await prisma.component.create({
       data: {
         name: body.name,
-        sku: body.sku,
-        description: body.description,
+        sku: body.sku || null,
         category: body.category,
         defaultSourcingType: body.defaultSourcingType,
-        defaultVendor: body.defaultVendor,
-        unitCost: parseFloat(body.unitCost) || 0,
-        currency: body.currency || "USD",
+        unitCost: parseFloat(body.unitCost),
         moq: body.moq ? parseInt(body.moq) : null,
         leadTimeDays: body.leadTimeDays ? parseInt(body.leadTimeDays) : null,
         isAtRisk: body.isAtRisk || false,
-        riskNotes: body.riskNotes,
+        defaultVendor: body.defaultVendor || null,
+        riskNotes: body.riskNotes || null,
       },
     });
-    
+
     return NextResponse.json(component, { status: 201 });
   } catch (error) {
     console.error("Error creating component:", error);

@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 // GET /api/components/[id] - Get single component
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const component = await prisma.component.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         bomLineItems: {
           include: {
@@ -38,13 +39,14 @@ export async function GET(
 // PUT /api/components/[id] - Update component
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const component = await prisma.component.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body.name,
         sku: body.sku,
@@ -74,11 +76,12 @@ export async function PUT(
 // DELETE /api/components/[id] - Delete component
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.component.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

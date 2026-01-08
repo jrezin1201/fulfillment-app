@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -33,7 +33,8 @@ interface Kit {
   bomLineItems: BomLineItem[];
 }
 
-export default function KitDetailPage({ params }: { params: { id: string } }) {
+export default function KitDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [kit, setKit] = useState<Kit | null>(null);
   const [components, setComponents] = useState<Component[]>([]);
@@ -48,7 +49,7 @@ export default function KitDetailPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     // Load kit from localStorage
     const kits = JSON.parse(localStorage.getItem("kits") || "[]");
-    const foundKit = kits.find((k: Kit) => k.id === params.id);
+    const foundKit = kits.find((k: Kit) => k.id === id);
     if (foundKit) {
       if (!foundKit.bomLineItems) {
         foundKit.bomLineItems = [];
@@ -59,7 +60,7 @@ export default function KitDetailPage({ params }: { params: { id: string } }) {
     // Load components
     const comps = JSON.parse(localStorage.getItem("components") || "[]");
     setComponents(comps);
-  }, [params.id]);
+  }, [id]);
 
   const handleAddComponent = () => {
     if (!kit || !formData.componentId || !formData.unitsPerKit) return;

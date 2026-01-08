@@ -12,7 +12,8 @@ export type FeatureId =
   | "projects"
   | "kits"
   | "components"
-  | "sow-generator";
+  | "sow-generator"
+  | "instructions";
 
 export interface SiteConfig {
   // App Metadata
@@ -49,7 +50,8 @@ export const siteConfig: SiteConfig = {
     "projects",     // Quote/SOW creation
     "kits",         // Kit management
     "components",   // Component library
-    "sow-generator" // SOW document generation
+    "sow-generator", // SOW document generation
+    "instructions"  // Instructions & documentation
   ],
 
   // UI Configuration

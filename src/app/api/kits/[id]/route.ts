@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 // GET /api/kits/[id] - Get single kit with BOM
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const kit = await prisma.kit.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         bomLineItems: {
           include: {
@@ -38,13 +39,14 @@ export async function GET(
 // PUT /api/kits/[id] - Update kit
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const kit = await prisma.kit.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body.name,
         description: body.description,
@@ -67,11 +69,12 @@ export async function PUT(
 // DELETE /api/kits/[id] - Delete kit
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await prisma.kit.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

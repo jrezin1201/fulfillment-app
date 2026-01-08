@@ -59,6 +59,24 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {/* Example Projects Banner */}
+      {projects.length === 3 && projects.some(p => p.id.startsWith('proj-')) && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg className="h-5 w-5 text-green-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-green-900">3 Example Projects Loaded</h3>
+              <p className="mt-1 text-sm text-green-800">
+                Click any project to see complete pricing breakdowns, warnings, and generate SOW documents.
+                These examples demonstrate different scenarios: B2B bulk (2 kit types), DTC with customer-provided components, and high-volume enterprise programs.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {projects.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
           <svg
@@ -109,7 +127,7 @@ export default function ProjectsPage() {
                       </div>
                     </div>
                     <div className="mt-2 sm:flex sm:justify-between">
-                      <div className="sm:flex space-x-4">
+                      <div className="sm:flex sm:flex-wrap gap-4">
                         <p className="flex items-center text-sm text-gray-500">
                           <svg className="mr-1.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -124,11 +142,24 @@ export default function ProjectsPage() {
                             {new Date(project.targetShipDate).toLocaleDateString()}
                           </p>
                         )}
+                        {project.projectKits && project.projectKits.length > 0 && (
+                          <p className="flex items-center text-sm text-gray-500 mt-2 sm:mt-0">
+                            <svg className="mr-1.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            {project.projectKits.reduce((sum: number, pk: any) => sum + pk.quantity, 0).toLocaleString()} kits
+                          </p>
+                        )}
                       </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                        <p className="font-medium">
-                          Total: ${project.totalProjectCost.toFixed(2)}
+                      <div className="mt-2 flex flex-col items-end text-sm sm:mt-0">
+                        <p className="text-lg font-bold text-gray-900">
+                          ${project.totalProjectCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
+                        {project.projectKits && project.projectKits.length > 0 && (
+                          <p className="text-xs text-gray-500">
+                            {project.projectKits.length} kit {project.projectKits.length === 1 ? 'type' : 'types'}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

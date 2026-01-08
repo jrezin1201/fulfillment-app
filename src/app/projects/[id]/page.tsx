@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { calculateProjectPricing, type BomLineItem } from "@/lib/pricing";
+import { SOWPreview } from "@/components/SOWPreview";
 
 interface ProjectKit {
   id: string;
@@ -12,6 +14,7 @@ interface ProjectKit {
   manufactureCost: number;
   assemblyCost: number;
   extendedTotal: number;
+  warnings?: string[];
 }
 
 interface Project {
@@ -33,20 +36,24 @@ interface Kit {
   name: string;
   distributionModel: string;
   fulfillmentModel: string;
+  bomLineItems?: BomLineItem[];
 }
 
-export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [availableKits, setAvailableKits] = useState<Kit[]>([]);
   const [showAddKit, setShowAddKit] = useState(false);
   const [selectedKitId, setSelectedKitId] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [showSOWPreview, setShowSOWPreview] = useState(false);
 
   useEffect(() => {
     // Load project from localStorage
     const projects = JSON.parse(localStorage.getItem("projects") || "[]");
-    const foundProject = projects.find((p: Project) => p.id === params.id);
+    const foundProject = projects.find((p: Project) => p.id === id);
     if (foundProject) {
       setProject(foundProject);
     }
@@ -54,7 +61,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
     // Load available kits
     const kits = JSON.parse(localStorage.getItem("kits") || "[]");
     setAvailableKits(kits);
-  }, [params.id]);
+  }, [id]);
 
   const handleAddKit = () => {
     if (!project || !selectedKitId || !quantity) return;
@@ -62,19 +69,32 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
     const kit = availableKits.find((k) => k.id === selectedKitId);
     if (!kit) return;
 
+    // Calculate costs using the pricing engine
+    const kitQuantity = parseInt(quantity);
+    const pricing = calculateKitCosts(kit, kitQuantity);
+
     const newProjectKit: ProjectKit = {
       id: Date.now().toString(),
       kitId: kit.id,
       kitName: kit.name,
-      quantity: parseInt(quantity),
-      manufactureCost: 0, // TODO: Calculate based on BOM
-      assemblyCost: 0, // TODO: Calculate
-      extendedTotal: 0,
+      quantity: kitQuantity,
+      manufactureCost: pricing.manufactureCost,
+      assemblyCost: pricing.assemblyCost,
+      extendedTotal: pricing.extendedTotal,
+      warnings: pricing.warnings,
     };
+
+    // Recalculate project totals
+    const allProjectKits = [...project.projectKits, newProjectKit];
+    const totalManufacture = allProjectKits.reduce((sum, pk) => sum + pk.manufactureCost, 0);
+    const totalAssembly = allProjectKits.reduce((sum, pk) => sum + pk.assemblyCost, 0);
 
     const updatedProject = {
       ...project,
-      projectKits: [...project.projectKits, newProjectKit],
+      projectKits: allProjectKits,
+      totalManufactureCost: totalManufacture,
+      totalAssemblyCost: totalAssembly,
+      totalProjectCost: totalManufacture + totalAssembly,
     };
 
     // Save to localStorage
@@ -90,12 +110,47 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
     setQuantity("");
   };
 
+  const calculateKitCosts = (kit: Kit, quantity: number) => {
+    // If kit has no BOM, use default assembly cost only
+    if (!kit.bomLineItems || kit.bomLineItems.length === 0) {
+      return {
+        manufactureCost: 0,
+        assemblyCost: 15 * quantity, // $15 default assembly cost per kit
+        extendedTotal: 15 * quantity,
+        warnings: ["Kit has no BOM defined - cannot calculate component costs"],
+      };
+    }
+
+    // Use pricing engine to calculate based on BOM
+    const pricing = calculateProjectPricing(
+      kit.bomLineItems as BomLineItem[],
+      quantity,
+      15 // $15 per kit assembly cost
+    );
+
+    return {
+      manufactureCost: pricing.totalManufactureCost,
+      assemblyCost: pricing.assemblyCost,
+      extendedTotal: pricing.totalCost,
+      warnings: pricing.warnings,
+    };
+  };
+
   const handleRemoveKit = (projectKitId: string) => {
     if (!project) return;
 
+    const remainingKits = project.projectKits.filter((pk) => pk.id !== projectKitId);
+
+    // Recalculate project totals
+    const totalManufacture = remainingKits.reduce((sum, pk) => sum + pk.manufactureCost, 0);
+    const totalAssembly = remainingKits.reduce((sum, pk) => sum + pk.assemblyCost, 0);
+
     const updatedProject = {
       ...project,
-      projectKits: project.projectKits.filter((pk) => pk.id !== projectKitId),
+      projectKits: remainingKits,
+      totalManufactureCost: totalManufacture,
+      totalAssemblyCost: totalAssembly,
+      totalProjectCost: totalManufacture + totalAssembly,
     };
 
     // Save to localStorage
@@ -281,6 +336,32 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
 
+      {/* Warnings */}
+      {project.projectKits.some((pk) => pk.warnings && pk.warnings.length > 0) && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-yellow-900 mb-2 flex items-center">
+            <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            Pricing Warnings & Notes
+          </h3>
+          <div className="space-y-3">
+            {project.projectKits.map((pk) =>
+              pk.warnings && pk.warnings.length > 0 ? (
+                <div key={pk.id} className="ml-7">
+                  <p className="text-sm font-medium text-yellow-800 mb-1">{pk.kitName} ({pk.quantity} kits):</p>
+                  <ul className="list-disc ml-5 text-sm text-yellow-700 space-y-1">
+                    {pk.warnings.map((warning, idx) => (
+                      <li key={idx}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Pricing Summary */}
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
@@ -306,16 +387,112 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             </div>
           </dl>
 
+          {project.projectKits.length > 0 && (
+            <div className="mt-4">
+              <button
+                onClick={() => setShowBreakdown(!showBreakdown)}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {showBreakdown ? "− Hide" : "+ Show"} Detailed Cost Breakdown
+              </button>
+            </div>
+          )}
+
           <div className="mt-6">
             <button
+              onClick={() => setShowSOWPreview(true)}
               disabled={project.projectKits.length === 0}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              Generate SOW Document
+              📄 Generate SOW Document
             </button>
           </div>
         </div>
       </div>
+
+      {/* Detailed Cost Breakdown */}
+      {showBreakdown && project.projectKits.length > 0 && (
+        <div className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Detailed Cost Breakdown</h3>
+            <div className="space-y-4">
+              {project.projectKits.map((pk) => {
+                const costPerKit = pk.quantity > 0 ? pk.extendedTotal / pk.quantity : 0;
+                const manufactureCostPerKit = pk.quantity > 0 ? pk.manufactureCost / pk.quantity : 0;
+                const assemblyCostPerKit = pk.quantity > 0 ? pk.assemblyCost / pk.quantity : 0;
+
+                return (
+                  <div key={pk.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="text-base font-semibold text-gray-900">{pk.kitName}</h4>
+                        <p className="text-sm text-gray-500">Quantity: {pk.quantity} kits</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-900">${pk.extendedTotal.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Extended Total</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center py-2 border-t border-gray-100">
+                        <div>
+                          <p className="font-medium text-gray-700">Manufacture & Source</p>
+                          <p className="text-xs text-gray-500">
+                            ${manufactureCostPerKit.toFixed(2)} per kit × {pk.quantity} kits
+                          </p>
+                        </div>
+                        <p className="font-semibold text-gray-900">${pk.manufactureCost.toFixed(2)}</p>
+                      </div>
+
+                      <div className="flex justify-between items-center py-2 border-t border-gray-100">
+                        <div>
+                          <p className="font-medium text-gray-700">Assembly & Fulfillment</p>
+                          <p className="text-xs text-gray-500">
+                            ${assemblyCostPerKit.toFixed(2)} per kit × {pk.quantity} kits
+                          </p>
+                        </div>
+                        <p className="font-semibold text-gray-900">${pk.assemblyCost.toFixed(2)}</p>
+                      </div>
+
+                      <div className="flex justify-between items-center py-2 border-t-2 border-gray-300 mt-2">
+                        <div>
+                          <p className="font-semibold text-gray-900">Cost Per Kit</p>
+                          <p className="text-xs text-gray-500">Total cost divided by quantity</p>
+                        </div>
+                        <p className="text-lg font-bold text-blue-600">${costPerKit.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {project.projectKits.length > 1 && (
+              <div className="mt-6 pt-4 border-t-2 border-gray-300">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">Program Summary</p>
+                    <p className="text-sm text-gray-500">
+                      {project.projectKits.length} kit types • {project.projectKits.reduce((sum, pk) => sum + pk.quantity, 0)} total kits
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600">${project.totalProjectCost.toFixed(2)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SOW Preview Modal */}
+      {showSOWPreview && (
+        <SOWPreview
+          project={project}
+          kits={availableKits}
+          onClose={() => setShowSOWPreview(false)}
+        />
+      )}
     </div>
   );
 }

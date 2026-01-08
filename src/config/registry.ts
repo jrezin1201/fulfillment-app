@@ -80,6 +80,17 @@ export const moduleRegistry: Record<FeatureId, ModuleMetadata> = {
     route: "/projects",
     tags: ["sow", "documents", "pdf", "export"],
   },
+
+  instructions: {
+    id: "instructions",
+    name: "Instructions & Docs",
+    description:
+      "Complete setup guide, how-to documentation, current architecture explanation, and API integration guide",
+    icon: "📚",
+    category: "Business Tools",
+    route: "/instructions",
+    tags: ["help", "documentation", "guide", "tutorial"],
+  },
 };
 
 /**

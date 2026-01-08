@@ -4,14 +4,15 @@ import { prisma } from "@/lib/prisma";
 // POST /api/projects/[id]/kits - Add kit to project
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const projectKit = await prisma.projectKit.create({
       data: {
-        projectId: params.id,
+        projectId: id,
         kitId: body.kitId,
         quantity: parseInt(body.quantity),
         manufactureCost: 0, // Will be calculated
