@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Component {
@@ -35,7 +34,6 @@ interface Kit {
 
 export default function KitDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const [kit, setKit] = useState<Kit | null>(null);
   const [components, setComponents] = useState<Component[]>([]);
   const [showAddComponent, setShowAddComponent] = useState(false);

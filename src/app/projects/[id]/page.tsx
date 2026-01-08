@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { calculateProjectPricing, type BomLineItem } from "@/lib/pricing";
 import { SOWPreview } from "@/components/SOWPreview";
@@ -41,7 +40,6 @@ interface Kit {
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [availableKits, setAvailableKits] = useState<Kit[]>([]);
   const [showAddKit, setShowAddKit] = useState(false);
@@ -74,7 +72,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     const pricing = calculateKitCosts(kit, kitQuantity);
 
     const newProjectKit: ProjectKit = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       kitId: kit.id,
       kitName: kit.name,
       quantity: kitQuantity,

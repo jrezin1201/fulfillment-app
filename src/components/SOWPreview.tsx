@@ -6,7 +6,13 @@
 
 "use client";
 
-import { generateCustomerFurnishedClause, generateDotSourcingClause } from "@/lib/pricing";
+interface BomLineItem {
+  id: string;
+  componentId: string;
+  componentName: string;
+  unitsPerKit: number;
+  sourcingType: string;
+}
 
 interface ProjectKit {
   id: string;
@@ -37,7 +43,7 @@ interface Kit {
   id: string;
   name: string;
   description?: string;
-  bomLineItems?: any[];
+  bomLineItems?: BomLineItem[];
 }
 
 interface SOWPreviewProps {
@@ -55,7 +61,7 @@ export function SOWPreview({ project, kits, onClose }: SOWPreviewProps) {
 
   const hasCustomerProvided = project.projectKits.some((pk) => {
     const kit = kits.find((k) => k.id === pk.kitId);
-    return kit?.bomLineItems?.some((item: any) => item.sourcingType === "customer_provided");
+    return kit?.bomLineItems?.some((item: BomLineItem) => item.sourcingType === "customer_provided");
   });
 
   return (
@@ -170,7 +176,7 @@ export function SOWPreview({ project, kits, onClose }: SOWPreviewProps) {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                              {kit.bomLineItems.map((item: any, idx: number) => (
+                              {kit.bomLineItems.map((item: BomLineItem, idx: number) => (
                                 <tr key={idx}>
                                   <td className="px-3 py-2 text-gray-900">{item.componentName}</td>
                                   <td className="px-3 py-2 text-right text-gray-900">{item.unitsPerKit}</td>

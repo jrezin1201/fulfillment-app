@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { moduleRegistry } from "@/config/registry";
-import { seedSampleData, clearAllData, hasSampleData } from "@/lib/sample-data";
+import { seedSampleData, clearAllData } from "@/lib/sample-data";
 
 export default function HomePage() {
   const modules = Object.values(moduleRegistry).filter((m) => m.id !== "auth");
@@ -17,7 +17,7 @@ export default function HomePage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleLoadSampleData = () => {
-    const result = seedSampleData();
+    seedSampleData();
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
 

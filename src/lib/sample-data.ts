@@ -43,6 +43,17 @@ export interface Kit {
   bomLineItems: BomLineItem[];
 }
 
+export interface ProjectKit {
+  id: string;
+  kitId: string;
+  kitName: string;
+  quantity: number;
+  manufactureCost: number;
+  assemblyCost: number;
+  extendedTotal: number;
+  warnings?: string[];
+}
+
 export interface Project {
   id: string;
   projectName: string;
@@ -54,7 +65,7 @@ export interface Project {
   totalAssemblyCost: number;
   totalProjectCost: number;
   createdAt: string;
-  projectKits: any[];
+  projectKits: ProjectKit[];
 }
 
 /**

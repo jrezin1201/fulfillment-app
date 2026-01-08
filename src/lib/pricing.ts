@@ -20,6 +20,7 @@ export interface Component {
 export interface BomLineItem {
   id: string;
   componentId: string;
+  componentName: string;
   component?: Component;
   unitsPerKit: number;
   bufferPercent: number;
