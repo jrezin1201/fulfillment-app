@@ -4,11 +4,10 @@ import { prisma } from "@/lib/prisma";
 // GET /api/kits/[id] - Get single kit with BOM
 export async function GET(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
   try {
-    const { id } = params;
+    const { id } = await segmentData.params;
     const kit = await prisma.kit.findUnique({
       where: { id },
       include: {
@@ -40,11 +39,10 @@ export async function GET(
 // PUT /api/kits/[id] - Update kit
 export async function PUT(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
   try {
-    const { id } = params;
+    const { id } = await segmentData.params;
     const body = await request.json();
 
     const kit = await prisma.kit.update({
@@ -71,11 +69,10 @@ export async function PUT(
 // DELETE /api/kits/[id] - Delete kit
 export async function DELETE(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
   try {
-    const { id } = params;
+    const { id } = await segmentData.params;
     await prisma.kit.delete({
       where: { id },
     });

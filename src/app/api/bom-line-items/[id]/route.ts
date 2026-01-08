@@ -4,11 +4,10 @@ import { prisma } from "@/lib/prisma";
 // PUT /api/bom-line-items/[id] - Update BOM line item
 export async function PUT(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
   try {
-    const { id } = params;
+    const { id } = await segmentData.params;
     const body = await request.json();
 
     const bomLineItem = await prisma.bomLineItem.update({
@@ -43,11 +42,10 @@ export async function PUT(
 // DELETE /api/bom-line-items/[id] - Remove component from kit BOM
 export async function DELETE(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  segmentData: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
   try {
-    const { id } = params;
+    const { id } = await segmentData.params;
     await prisma.bomLineItem.delete({
       where: { id },
     });
